@@ -2,7 +2,7 @@ import streamlit as st
 
 from core.services.analyze_service import AnalyzeService
 from components.forms import address_input_form
-from components.header import render_header
+from components.common.header import render_header
 from core.state import get_state, set_state
 
 st.set_page_config(page_title="주소입력 | 옥상이몽", page_icon="📍", layout="wide")

@@ -1,7 +1,7 @@
 import streamlit as st
 
 from core.services.analyze_service import AnalyzeService
-from components.header import render_header
+from components.common.header import render_header
 from core.state import get_state, set_state
 
 st.set_page_config(page_title="결과확인 | 옥상이몽", page_icon="📊", layout="wide")

@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>옥상이몽 · STEP 1 옥상 조건 확인</title>
+    <link rel="stylesheet" href="step1_condition.css" />
+  </head>
+  <body>
+    <header class="app-header">
+      <div class="container-1320 header-inner">
+        <div class="logo">
+          <div class="logo-mark">옥</div>
+          <span class="logo-text">옥상이몽</span>
+        </div>
+        <nav class="nav">
+          <a class="nav-link" href="#">서비스 소개</a>
+          <a class="nav-link" href="#">데이터 근거</a>
+          <a class="nav-link" href="#">G-SEED란?</a>
+          <a class="nav-link" href="#">문의하기</a>
+          <a class="btn btn-outline" href="#">시뮬레이션 시작</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="page">
+      <div class="container-1320">
+        <div class="content-1120">
+
+          <section class="section-header">
+            <div class="eyebrow">SIMULATION · STEP 1</div>
+            <h1 class="h2">옥상 조건 확인</h1>
+            <p class="subtitle">주소를 기반으로 시뮬레이션에 사용할 면적 정보를 확인합니다.</p>
+          </section>
+
+          <section class="stepper" aria-label="simulation steps">
+            <div class="step active">
+              <div class="dot"></div>
+              <div class="label">조건확인</div>
+            </div>
+            <div class="line"></div>
+            <div class="step">
+              <div class="dot"></div>
+              <div class="label">계획</div>
+            </div>
+            <div class="line"></div>
+            <div class="step">
+              <div class="dot"></div>
+              <div class="label">결과</div>
+            </div>
+            <div class="line"></div>
+            <div class="step">
+              <div class="dot"></div>
+              <div class="label">리포트</div>
+            </div>
+          </section>
+
+          <section class="grid">
+            <div class="card">
+              <div class="card-header">
+                <div class="pin">📍</div>
+                <div class="header-text">
+                  <div class="card-title">서울시청</div>
+                  <div class="card-caption">서울특별시 중구 세종대로 110</div>
+                </div>
+              </div>
+
+              <div class="chips">
+                <div class="chip">
+                  <div class="chip-label">바닥면적</div>
+                  <div class="chip-value">3,846 <span class="unit">㎡</span></div>
+                </div>
+                <div class="chip">
+                  <div class="chip-label">옥상 가용면적</div>
+                  <div class="chip-value">2,500 <span class="unit">㎡</span></div>
+                </div>
+                <div class="chip">
+                  <div class="chip-label">가용 비율</div>
+                  <div class="chip-value">65 <span class="unit">%</span></div>
+                </div>
+              </div>
+
+              <div class="callout">
+                <div class="callout-icon">i</div>
+                <div class="callout-text">이 면적은 다음 단계에서 CO₂·온도·경제성 계산의 기준값으로 사용됩니다.</div>
+              </div>
+
+              <div class="edit">
+                <div class="edit-title">면적이 다르면 직접 수정할 수 있습니다.</div>
+                <div class="edit-row">
+                  <div class="input">
+                    <div class="input-label">옥상 가용면적(㎡)</div>
+                    <input class="input-box" type="text" value="2500" />
+                  </div>
+                  <button class="btn btn-secondary" type="button">값 적용</button>
+                </div>
+                <div class="edit-help">가용면적은 옥상 구조·설비에 따라 달라질 수 있습니다.</div>
+              </div>
+
+              <div class="cta-row">
+                <a class="btn btn-ghost" href="#">이전(주소 수정)</a>
+                <a class="btn btn-primary" href="#">다음: 녹화 계획 →</a>
+              </div>
+            </div>
+
+            <aside class="side">
+              <div class="card">
+                <div class="card-title">왜 면적 확인이 필요한가요?</div>
+                <ul class="bullets">
+                  <li>면적은 CO₂ 흡수량 계산의 기준입니다.</li>
+                  <li>면적은 온도 저감 효과의 크기를 결정합니다.</li>
+                  <li>리포트(PDF)에는 이 값이 근거로 포함됩니다.</li>
+                </ul>
+                <div class="divider"></div>
+                <a class="link" href="#">데이터 근거 보기 →</a>
+              </div>
+            </aside>
+          </section>
+
+        </div>
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="container-1320 footer-inner">
+        <div>© 2025 옥상이몽 · Rooftop Greening Effect Simulator</div>
+        <div class="footer-links">
+          <a href="#">개인정보처리방침</a>
+          <a href="#">문의하기</a>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>
