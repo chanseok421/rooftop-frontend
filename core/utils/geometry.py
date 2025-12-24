@@ -17,15 +17,44 @@ def haversine_m(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
     return R * c
 
+def _looks_like_korea_lonlat(points: list[Tuple[float, float]]) -> bool:
+    if not points:
+        return False
+    valid = 0
+    for lon, lat in points:
+        if 33.0 <= lat <= 39.5 and 124.0 <= lon <= 132.5:
+            valid += 1
+    return valid / len(points) >= 0.6
+
+
+def _looks_like_korea_latlon(points: list[Tuple[float, float]]) -> bool:
+    if not points:
+        return False
+    valid = 0
+    for lat, lon in points:
+        if 33.0 <= lat <= 39.5 and 124.0 <= lon <= 132.5:
+            valid += 1
+    return valid / len(points) >= 0.6
+
+
+def _normalize_polygon_lonlat(points: list[Tuple[float, float]]) -> list[Tuple[float, float]]:
+    if _looks_like_korea_lonlat(points):
+        return points
+    if _looks_like_korea_latlon(points):
+        return [(lon, lat) for lat, lon in points]
+    return points
+
 def polygon_area_m2(coords_lonlat: Iterable[Tuple[float, float]]) -> float:
     """Approximate polygon area in square meters from lon/lat coordinates.
 
     coords_lonlat: [(lon, lat), ...] closed or open polygon.
     NOTE: This uses a simple local projection; replace with shapely/pyproj for accuracy.
-    """
+    """ 
     pts = list(coords_lonlat)
     if len(pts) < 3:
         return 0.0
+    
+    pts = _normalize_polygon_lonlat(pts)
     
     lat0 = sum(lat for _, lat in pts) / len(pts)
     meters_per_deg_lat = (

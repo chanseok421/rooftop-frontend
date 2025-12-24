@@ -35,7 +35,7 @@ class RooftopAreaEstimate(BaseModel):
 
 
 class ScenarioInput(BaseModel):
-    greening_type: Literal["grass", "sedum", "shrub"]
+    greening_type: Literal["grass", "sedum", "shrub", "tree"]
     coverage_ratio: float = Field(ge=0.0, le=1.0)
 
 

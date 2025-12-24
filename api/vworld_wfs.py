@@ -87,7 +87,6 @@ def get_building_polygon(
         "srsname": "EPSG:4326",
         "output": "application/json",     # ✅ VWorld WFS JSON
         "key": api_key,
-        "domain": "http://localhost:8501"
     }
     if domain:
         params["domain"] = domain
