@@ -8,6 +8,9 @@ from ui.area_confirm_ui import render_area_confirm_ui
 
 st.set_page_config(page_title="면적확인 | 옥상이몽", page_icon="📐", layout="wide")
 
+from components.common.style import apply_common_styles
+apply_common_styles()
+
 render_header("simulate")
 
 state = get_state()
@@ -55,15 +58,27 @@ if ui_state["apply_clicked"]:
         
         
 if ui_state["prev_clicked"]:
-    st.switch_page("pages/1_📍_주소입력.py")
+    st.switch_page("app.py")
 
 if ui_state["next_clicked"]:
-    if not get_state().get("roof_area_m2_confirmed") and suggested_area:
-         st.info("추천 면적을 적용하려면 '값 적용'을 눌러주세요.")
-    if not get_state().get("roof_area_m2_confirmed"):
-        st.error("다음 단계로 이동하려면 면적을 입력해주세요.")
+    # Confirmed check logic
+    confirmed = bool(get_state().get("roof_area_m2_confirmed"))
+    
+    if confirmed:
+        # State is already set in area_confirm_ui or via callbacks, 
+        # but ensuring 'usable_area' is set if needed (logic from before)
+        # Note: In area_confirm_ui, it likely sets 'roof_area_m2_confirmed'
+        # We might need to ensure 'area' dict is set if downstream pages expect it.
+        # Checking previous file content: it set "area": {"roof_area":..., "usable_area":...}
+        
+        roof_area = get_state().get("roof_area_m2_confirmed")
+        set_state("area", {
+            "roof_area": roof_area,
+            "usable_area": roof_area # Defaulting usable to total if not specified
+        })
+        st.switch_page("pages/2_step2_planning.py")
     else:
-        st.switch_page("pages/3_🌿_녹화계획.py")
+        st.error("다음 단계로 이동하려면 '값 적용'을 눌러 면적을 확정해주세요.")
 
 
 render_footer()

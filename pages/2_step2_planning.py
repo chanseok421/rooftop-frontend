@@ -9,6 +9,10 @@ from core.state import get_state, set_state
 from ui.planning_ui import render_planning_ui
 
 st.set_page_config(page_title="녹화계획 | 옥상이몽", page_icon="🌿", layout="wide")
+
+from components.common.style import apply_common_styles
+apply_common_styles()
+
 render_header("simulate")
 
 state = get_state()
@@ -55,11 +59,13 @@ if ui_state["save_clicked"]:
 
 
 if ui_state["prev_clicked"]:
-    st.switch_page("pages/2_📐_면적확인.py")
+    st.switch_page("pages/1_step1_condition_check.py")
 
-if ui_state["next_clicked"]:
-    svc.set_scenario(scenario)
-    set_state("scenario", scenario.model_dump())
-    st.switch_page("pages/4_📊_결과확인.py")
+c1, c2 = st.columns([2, 1])
+with c2:
+    if st.button("결과 확인", type="primary", use_container_width=True):
+        # 상태 저장 (plan_id, etc)
+        # set_state("plan", ...) - 이미 session_state 연동됨
+        st.switch_page("pages/3_step3_result.py")
 
 render_footer()
