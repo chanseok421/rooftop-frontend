@@ -84,8 +84,8 @@ def get_header_html(active_page: str = None):
           <span class="logo-text">옥상이몽</span>
         </div>
         <nav class="nav">
-          <a class="{get_class('intro')}" href="#">서비스 소개</a>
-          <a class="{get_class('data')}" href="#">데이터 근거</a>
+          <a class="{get_class('intro')}" href="/service_intro" target="_top">서비스 소개</a>
+          <a class="{get_class('data')}" href="/data_reference" target="_top">데이터 근거</a>
           <a class="{get_class('gseed')}" href="/gseed" target="_top">G-SEED란?</a>
           <a class="{get_class('contact')}" href="#">문의하기</a>
         </nav>
