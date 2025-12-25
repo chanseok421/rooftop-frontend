@@ -8,6 +8,8 @@ def get_header_css():
         background: #0b3b5b;
         color: #fff;
         width: 100%;
+        position: relative;
+        z-index: 9999;
     }
     .container-1320 {
         width: 100%;
@@ -84,7 +86,7 @@ def get_header_html(active_page: str = None):
         <nav class="nav">
           <a class="{get_class('intro')}" href="#">서비스 소개</a>
           <a class="{get_class('data')}" href="#">데이터 근거</a>
-          <a class="{get_class('gseed')}" href="#">G-SEED란?</a>
+          <a class="{get_class('gseed')}" href="/gseed" target="_top">G-SEED란?</a>
           <a class="{get_class('contact')}" href="#">문의하기</a>
         </nav>
       </div>
@@ -110,7 +112,7 @@ def render_header(active_page: str = None):
     </style>
     {html}
     """
-    components.html(full_html, height=64, scrolling=False)
+    st.html(full_html)
 
 
 def get_stepper_css():
@@ -230,4 +232,4 @@ def render_header_with_stepper(current_step: int = 1):
     {header_html}
     {stepper_html}
     """
-    components.html(full_html, height=130, scrolling=False)
+    st.html(full_html)

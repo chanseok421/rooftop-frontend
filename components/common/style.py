@@ -34,7 +34,9 @@ def apply_common_styles():
         }
         
         /* 헤더(Iframe)는 전체 너비 및 여백 없음 */
-        [data-testid="stMainBlockContainer"] [data-testid="stVerticalBlock"] > div:has(iframe) {
+        [data-testid="stMainBlockContainer"] [data-testid="stVerticalBlock"] > div:has(iframe),
+        [data-testid="stMainBlockContainer"] [data-testid="stVerticalBlock"] > div:has(.app-header),
+        [data-testid="stMainBlockContainer"] [data-testid="stVerticalBlock"] > div:has(.stepper-container) {
             max-width: none;
             width: 100%;
             padding-left: 0;
