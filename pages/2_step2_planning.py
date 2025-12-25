@@ -61,11 +61,7 @@ if ui_state["save_clicked"]:
 if ui_state["prev_clicked"]:
     st.switch_page("pages/1_step1_condition_check.py")
 
-c1, c2 = st.columns([2, 1])
-with c2:
-    if st.button("결과 확인", type="primary", use_container_width=True):
-        # 상태 저장 (plan_id, etc)
-        # set_state("plan", ...) - 이미 session_state 연동됨
-        st.switch_page("pages/3_step3_result.py")
+if ui_state["next_clicked"]:
+    st.switch_page("pages/3_step3_result.py")
 
 render_footer()
