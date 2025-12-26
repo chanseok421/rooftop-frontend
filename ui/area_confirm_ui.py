@@ -26,14 +26,7 @@ def render_area_confirm_ui(
         """
         <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body {
-          font-family: -apple-system, BlinkMacSystemFont, "Noto Sans KR", system-ui, sans-serif;
-          background: #f4f6f9;
-          color: #1a202c;
-          line-height: 1.5;
-        }
         .app-header { position: sticky; top: 0; z-index: 50; }
-        .page { padding: 28px 0 44px; }
 
         .container-1320 {
           width: 100%;
@@ -246,9 +239,9 @@ def render_area_confirm_ui(
         unsafe_allow_html=True,
     )
 
-    st.markdown('<main class="page">', unsafe_allow_html=True)
-    st.markdown('<div class="container-1320">', unsafe_allow_html=True)
-    st.markdown('<div class="content-1120">', unsafe_allow_html=True)
+    # st.markdown('<main class="page">', unsafe_allow_html=True)
+    # st.markdown('<div class="container-1320">', unsafe_allow_html=True)
+    # st.markdown('<div class="content-1120">', unsafe_allow_html=True)
 
     st.markdown(
         """
@@ -290,7 +283,9 @@ def render_area_confirm_ui(
         unsafe_allow_html=True,
     )
 
-    left_col, right_col = st.columns([3, 1], gap="large")
+    # Calculated ratio: 487px vs 360px -> ~1.35 : 1
+    # Using specific weights close to that
+    left_col, right_col = st.columns([1.35, 1], gap="large")
 
     with left_col:
         st.markdown(
@@ -391,7 +386,7 @@ def render_area_confirm_ui(
             unsafe_allow_html=True,
         )
 
-    st.markdown("</div></div></main>", unsafe_allow_html=True)
+    # st.markdown("</div></div></main>", unsafe_allow_html=True)
 
     return {
         "roof_area_value": roof_area_value,

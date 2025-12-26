@@ -76,7 +76,7 @@ def render_landing_page():
                     try:
                         loc = svc.set_address(address)
                         set_state("location", loc.model_dump())
-                        st.switch_page("pages/2_📐_면적확인.py")
+                        st.switch_page("pages/1_step1_condition_check.py")
                     except Exception as exc:
                         st.error(f"주소 처리 실패: {exc}")
         

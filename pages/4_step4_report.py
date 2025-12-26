@@ -8,6 +8,10 @@ from core.state import get_state
 from ui.report_ui import render_report_ui
 
 st.set_page_config(page_title="리포트 | 옥상이몽", page_icon="📄", layout="wide")
+
+from components.common.style import apply_common_styles
+apply_common_styles()
+
 render_header("simulate")
 
 state = get_state()
@@ -41,7 +45,7 @@ actions = render_report_ui(
 )
 
 if actions.get("prev_clicked"):
-    st.switch_page("pages/4_📊_결과확인.py")
+    st.switch_page("pages/3_step3_result.py")
 
 if actions.get("home_clicked"):
     st.switch_page("app.py")

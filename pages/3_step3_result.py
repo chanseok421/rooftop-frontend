@@ -12,6 +12,9 @@ from ui.result_ui import render_result_ui
 
 st.set_page_config(page_title="결과확인 | 옥상이몽", page_icon="📊", layout="wide")
 
+from components.common.style import apply_common_styles
+apply_common_styles()
+
 render_header("simulate")
 
 state = get_state()
@@ -48,9 +51,11 @@ ui_state = render_result_ui(
 )
 
 if ui_state.get("prev_clicked"):
-    st.switch_page("pages/3_🌿_녹화계획.py")
+    st.switch_page("pages/2_step2_planning.py")
 
-if ui_state.get("next_clicked"):
-    st.switch_page("pages/5_📄_리포트.py")
+c1, c2 = st.columns(2)
+with c2:
+    if st.button("상세 리포트 보기", type="primary", use_container_width=True):
+        st.switch_page("pages/4_step4_report.py")
     
 render_footer()
