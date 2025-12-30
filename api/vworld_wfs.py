@@ -5,6 +5,8 @@ import os
 from typing import Iterable, Optional
 
 import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 
 VWORLD_WFS_URL = "https://api.vworld.kr/req/wfs"
 
@@ -91,7 +93,24 @@ def get_building_polygon(
     if domain:
         params["domain"] = domain
 
-    resp = requests.get(VWORLD_WFS_URL, params=params, timeout=timeout_s)
+    # Session w/ Retry
+    session = requests.Session()
+    retries = Retry(
+        total=3,
+        backoff_factor=1,
+        status_forcelist=[500, 502, 503, 504],
+        raise_on_status=False
+    )
+    session.mount("https://", HTTPAdapter(max_retries=retries))
+    
+    # Headers
+    session.headers.update({
+        "User-Agent": "RooftopGreening/1.0",
+    })
+    if domain:
+        session.headers.update({"Referer": f"https://{domain}"})
+
+    resp = session.get(VWORLD_WFS_URL, params=params, timeout=timeout_s)
 
     # ✅ 여기부터 디버그 핵심: "왜 안 나오는지"를 터미널에서 바로 확인 가능
     ctype = resp.headers.get("Content-Type", "")
