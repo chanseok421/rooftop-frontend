@@ -8,16 +8,29 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+def _get_from_secrets(k: str) -> str | None:
+    try:
+        import streamlit as st
+        # st.secrets 접근 시점에 예외가 날 수 있으니 여기서 잡는다
+        return st.secrets.get(k)  # type: ignore[attr-defined]
+    except Exception:
+        return None
+
+def _get(k: str) -> str | None:
+    return os.getenv(k) or _get_from_secrets(k) or None
+
+
 @dataclass(frozen=True)
 class Settings:
-    env: str = os.getenv("OKSSANGIMONG_ENV", "dev")
-    data_dir: Path = Path(os.getenv("OKSSANGIMONG_DATA_DIR", "./data")).resolve()
+    env: str = _get("OKSSANGIMONG_ENV") or "dev"
+    data_dir: Path = Path(_get("OKSSANGIMONG_DATA_DIR") or "./data").resolve()
 
-    kakao_rest_api_key: str | None = os.getenv("KAKAO_REST_API_KEY") or None
-    vworld_api_key: str | None = os.getenv("VWORLD_API_KEY") or None
+    kakao_rest_api_key: str | None = _get("KAKAO_REST_API_KEY")
+    vworld_api_key: str | None = _get("VWORLD_API_KEY")
+    vworld_domain: str | None = _get("VWORLD_DOMAIN")
 
-    # 버전 관리(계수/수식/데이터)
     engine_version: str = "0.1.0"
     coefficient_set_version: str = "v1"
+
 
 settings = Settings()
