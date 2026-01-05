@@ -138,7 +138,7 @@ def _fetch_polygon_once(
         print("[VWORLD WFS] BODY:", resp.text[:500])
         return None
 
-   try:
+    try:
         data = resp.json()
     except ValueError:
         print("[VWORLD WFS] JSON decode failed | URL:", resp.url)
