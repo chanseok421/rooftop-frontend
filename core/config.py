@@ -15,6 +15,7 @@ class Settings:
 
     kakao_rest_api_key: str | None = os.getenv("KAKAO_REST_API_KEY") or None
     vworld_api_key: str | None = os.getenv("VWORLD_API_KEY") or None
+    vworld_domain: str | None = os.getenv("VWORLD_DOMAIN") or None
 
     # 버전 관리(계수/수식/데이터)
     engine_version: str = "0.1.0"

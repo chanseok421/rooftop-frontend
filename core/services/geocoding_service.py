@@ -12,7 +12,10 @@ def default_provider() -> GeocodingProvider:
     if settings.kakao_rest_api_key:
         return KakaoGeocodingProvider(api_key=settings.kakao_rest_api_key)
     if settings.vworld_api_key:
-        return VWorldGeocodingProvider(api_key=settings.vworld_api_key)
+        return VWorldGeocodingProvider(
+            api_key=settings.vworld_api_key,
+            domain=settings.vworld_domain,
+        )
     return _DummyGeocodingProvider()
 
 class GeocodingService:

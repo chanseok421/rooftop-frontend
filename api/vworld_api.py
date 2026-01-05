@@ -12,8 +12,9 @@ class VWorldGeocodingProvider:
 
     BASE_URL = "https://api.vworld.kr/req/address"
 
-    def __init__(self, api_key: str, timeout_s: float = 5.0):
+    def __init__(self, api_key: str, *, domain: str | None = None, timeout_s: float = 5.0):
         self.api_key = api_key
+        self.domain = domain
         self.timeout_s = timeout_s
 
     def geocode(self, address: str) -> LocationResult | None:
@@ -30,6 +31,8 @@ class VWorldGeocodingProvider:
             "address": address,
             "key": self.api_key,
         }
+        if self.domain:
+            params["domain"] = self.domain
         resp = requests.get(self.BASE_URL, params=params, timeout=self.timeout_s)
         resp.raise_for_status()
         data = resp.json()
