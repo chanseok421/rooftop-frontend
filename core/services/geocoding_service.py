@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import requests
+
 from core.exceptions import AddressNotFoundError
 from core.models import LocationResult
 from api.adapters import GeocodingProvider
@@ -23,10 +25,11 @@ class GeocodingService:
         self.provider = provider or default_provider()
 
     def geocode(self, address: str) -> LocationResult:
-        res = self.provider.geocode(address)
-        if res is None:
-            raise AddressNotFoundError(f"주소를 찾지 못했습니다: {address}")
-        return res
+         try:
+            res = self.provider.geocode(address)
+        except requests.RequestException as exc:
+            raise AddressNotFoundError("지오코딩 서비스에 연결하지 못했습니다. 잠시 후 다시 시도해주세요.") 
+from exc
 
 class _DummyGeocodingProvider:
     """No external API. Returns a fixed point near Seoul City Hall."""

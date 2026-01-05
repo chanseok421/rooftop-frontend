@@ -4,11 +4,35 @@ import math
 import os
 import time
 from typing import Iterable, Optional
-
-import requests
 from urllib.parse import urlparse
 
+import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
+
 VWORLD_WFS_URL = "https://api.vworld.kr/req/wfs"
+
+DEFAULT_HEADERS = {"User-Agent": "okssangimong/1.0 (vworld-wfs)"}
+
+
+def _build_retry_session() -> requests.Session:
+    retry = Retry(
+        total=3,
+        backoff_factor=0.4,
+        status_forcelist=(429, 500, 502, 503, 504),
+        allowed_methods=frozenset(["GET"]),
+        raise_on_status=False,
+    )
+    adapter = HTTPAdapter(max_retries=retry)
+
+    session = requests.Session()
+    session.headers.update(DEFAULT_HEADERS)
+    session.mount("http://", adapter)
+    session.mount("https://", adapter)
+    return session
+
+
+_SESSION = _build_retry_session()
 
 
 def _bbox_from_point(lat: float, lon: float, radius_m: float) -> tuple[float, float, float, float]:
@@ -90,7 +114,7 @@ def _fetch_polygon_once(
     if domain:
         params["domain"] = domain
 
-    resp = requests.get(VWORLD_WFS_URL, params=params, timeout=timeout_s)
+    resp = _SESSION.get(VWORLD_WFS_URL, params=params, timeout=timeout_s)
     ctype = resp.headers.get("Content-Type", "")
 
     # HTTP 에러
@@ -114,7 +138,12 @@ def _fetch_polygon_once(
         print("[VWORLD WFS] BODY:", resp.text[:500])
         return None
 
-    data = resp.json()
+   try:
+        data = resp.json()
+    except ValueError:
+        print("[VWORLD WFS] JSON decode failed | URL:", resp.url)
+        print("[VWORLD WFS] BODY:", resp.text[:500])
+        return None
     features = data.get("features") or []
     if not features:
         # 0건이면 그냥 None

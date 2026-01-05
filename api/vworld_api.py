@@ -3,7 +3,30 @@ from __future__ import annotations
 from urllib.parse import urlparse
 
 import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
+
 from core.models import LocationResult
+
+DEFAULT_HEADERS = {"User-Agent": "okssangimong/1.0 (vworld-geocoder)"}
+
+
+def _build_retry_session() -> requests.Session:
+    retry = Retry(
+        total=3,
+        backoff_factor=0.4,
+        status_forcelist=(429, 500, 502, 503, 504),
+        allowed_methods=frozenset(["GET"]),
+        raise_on_status=False,
+    )
+    adapter = HTTPAdapter(max_retries=retry)
+
+    session = requests.Session()
+    session.headers.update(DEFAULT_HEADERS)
+    session.mount("http://", adapter)
+    session.mount("https://", adapter)
+    return session
+
 
 def _normalize_domain(domain: str | None) -> str | None:
     if not domain:
@@ -27,15 +50,20 @@ class VWorldGeocodingProvider:
         self.api_key = api_key
         self.domain = _normalize_domain(domain)
         self.timeout_s = timeout_s
+        self.session = _build_retry_session()
+
 
     def _build_params(self, address: str, *, include_domain: bool = True) -> dict:
 
         params = {
             "service": "address",
             "request": "getcoord",
+             "version": "2.0",
             "format": "json",
             "crs": "EPSG:4326",
             "type": "ROAD",
+            "refine": "true",
+            "simple": "false",
             "address": address,
             "key": self.api_key,
         }
@@ -44,9 +72,12 @@ class VWorldGeocodingProvider:
         return params
 
     def _request(self, params: dict) -> dict:
-        resp = requests.get(self.BASE_URL, params=params, timeout=self.timeout_s)
+        resp = self.session.get(self.BASE_URL, params=params, timeout=self.timeout_s)
         resp.raise_for_status()
-        return resp.json()
+        try:
+            return resp.json()
+        except ValueError as exc:
+            raise requests.RequestException("VWorld geocoding returned a non-JSON response.") from exc
 
     def _parse_response(self, data: dict, fallback_address: str) -> LocationResult | None:
         resp_obj = (data or {}).get("response") or {}
