@@ -28,7 +28,7 @@ class VWorldGeocodingProvider:
         self.domain = _normalize_domain(domain)
         self.timeout_s = timeout_s
 
-   def _build_params(self, address: str, *, include_domain: bool = True) -> dict:
+    def _build_params(self, address: str, *, include_domain: bool = True) -> dict:
 
         params = {
             "service": "address",
@@ -67,7 +67,7 @@ class VWorldGeocodingProvider:
             extra={"raw": data},
         )
 
-        def geocode(self, address: str) -> LocationResult | None:
+    def geocode(self, address: str) -> LocationResult | None:
         address = (address or "").strip()
         if not address:
             return None
@@ -90,4 +90,5 @@ class VWorldGeocodingProvider:
 
         if last_error:
             raise last_error
+            
         return None
