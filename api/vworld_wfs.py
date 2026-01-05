@@ -2,11 +2,10 @@ from __future__ import annotations
 
 import math
 import os
+import time
 from typing import Iterable, Optional
 
 import requests
-from requests.adapters import HTTPAdapter
-from urllib3.util.retry import Retry
 
 VWORLD_WFS_URL = "https://api.vworld.kr/req/wfs"
 
@@ -54,93 +53,61 @@ def _extract_polygons(geometry: dict) -> list[list[tuple[float, float]]]:
     return polygons
 
 
-def get_building_polygon(
-    coords: tuple[float, float],
+def _fetch_polygon_once(
+    *,
+    lat: float,
+    lon: float,
     api_key: str,
-    radius_m: float = 30.0,
-    timeout_s: float = 10.0,
-    domain: Optional[str] = None,
-):
-    """
-    coords는 (lat, lon)로 들어온다고 가정.
-    (lon, lat)가 들어오는 경우가 많아서 한국 좌표 범위로 자동 보정도 넣음.
-    """
-
-    lat, lon = coords
-
-    # ✅ 흔한 실수: (lon,lat)를 (lat,lon)으로 넣는 경우 자동 교정(대한민국 범위 기준)
-    if not (33.0 <= lat <= 39.5 and 124.0 <= lon <= 132.5) and (33.0 <= lon <= 39.5 and 124.0 <= lat <= 132.5):
-        lat, lon = lon, lat
-
-    # bbox 계산
+    radius_m: float,
+    timeout_s: float,
+    domain: Optional[str],
+) -> Optional[list[tuple[float, float]]]:
     min_lon, min_lat, max_lon, max_lat = _bbox_from_point(lat, lon, radius_m)
 
-    # ✅ VWorld WFS: EPSG:4326이면 bbox 순서가 (ymin,xmin,ymax,xmax)
+    # EPSG:4326 bbox 순서: (ymin,xmin,ymax,xmax) = (minLat,minLon,maxLat,maxLon)
     bbox_str = f"{min_lat},{min_lon},{max_lat},{max_lon}"
-
-    domain = domain or os.getenv("VWORLD_DOMAIN")  # 필요하면 환경변수로도 주입
 
     params = {
         "service": "WFS",
         "request": "GetFeature",
         "version": "1.1.0",
-        "typename": "lt_c_bldginfo",      # ✅ VWorld 레이어명
+        "typename": "lt_c_bldginfo",
         "bbox": bbox_str,
         "srsname": "EPSG:4326",
-        "output": "application/json",     # ✅ VWorld WFS JSON
+        "output": "application/json",
         "key": api_key,
     }
     if domain:
         params["domain"] = domain
 
-    # Session w/ Retry
-    session = requests.Session()
-    retries = Retry(
-        total=3,
-        backoff_factor=1,
-        status_forcelist=[500, 502, 503, 504],
-        raise_on_status=False
-    )
-    session.mount("https://", HTTPAdapter(max_retries=retries))
-    
-    # Headers
-    session.headers.update({
-        "User-Agent": "RooftopGreening/1.0",
-    })
-    if domain:
-        session.headers.update({"Referer": f"https://{domain}"})
-
-    resp = session.get(VWORLD_WFS_URL, params=params, timeout=timeout_s)
-
-    # ✅ 여기부터 디버그 핵심: "왜 안 나오는지"를 터미널에서 바로 확인 가능
+    resp = requests.get(VWORLD_WFS_URL, params=params, timeout=timeout_s)
     ctype = resp.headers.get("Content-Type", "")
-    if resp.status_code != 200:
-        print("[VWORLD WFS] HTTP", resp.status_code)
-        print("[VWORLD WFS] URL:", resp.url)
-        print("[VWORLD WFS] CT:", ctype)
-        print("[VWORLD WFS] BODY:", resp.text[:800])
-        resp.raise_for_status()
 
-    if "json" not in ctype.lower():
-        # 인증키 오류(응답이 XML) 등은 조용히 무시하고 폴리곤 없이 진행
-        if "<ServiceException" in resp.text:
-            return None
-        print("[VWORLD WFS] Non-JSON response")
-        print("[VWORLD WFS] URL:", resp.url)
+    # HTTP 에러
+    if resp.status_code != 200:
+        # 필요하면 print 대신 logging으로 교체 추천
+        print("[VWORLD WFS] HTTP", resp.status_code, "| URL:", resp.url)
         print("[VWORLD WFS] CT:", ctype)
-        print("[VWORLD WFS] BODY:", resp.text[:800])
+        print("[VWORLD WFS] BODY:", resp.text[:500])
+        return None
+
+    # JSON이 아닌 경우(XML ServiceExceptionReport 등)
+    if "json" not in ctype.lower():
+        if "<ServiceException" in resp.text or "<ServiceExceptionReport" in resp.text:
+            print("[VWORLD WFS] ServiceExceptionReport returned")
+            print("[VWORLD WFS] URL:", resp.url)
+            print("[VWORLD WFS] CT:", ctype)
+            print("[VWORLD WFS] BODY:", resp.text[:500])
+            return None
+        print("[VWORLD WFS] Non-JSON response | URL:", resp.url)
+        print("[VWORLD WFS] CT:", ctype)
+        print("[VWORLD WFS] BODY:", resp.text[:500])
         return None
 
     data = resp.json()
     features = data.get("features") or []
-
     if not features:
-        print("[VWORLD WFS] 0 features returned")
-        print("[VWORLD WFS] URL:", resp.url)
-        print("[VWORLD WFS] coords(lat,lon):", (lat, lon))
-        print("[VWORLD WFS] bbox:", bbox_str)
-        # 서버가 에러를 JSON으로 주는 케이스도 있어서 일부 출력
-        print("[VWORLD WFS] JSON keys:", list(data.keys())[:20])
+        # 0건이면 그냥 None
         return None
 
     polygons: list[list[tuple[float, float]]] = []
@@ -148,8 +115,6 @@ def get_building_polygon(
         polygons.extend(_extract_polygons(f.get("geometry") or {}))
 
     if not polygons:
-        print("[VWORLD WFS] features exist but no polygons extracted")
-        print("[VWORLD WFS] sample geometry:", (features[0].get("geometry") or {}))
         return None
 
     # 점 포함 폴리곤 우선
@@ -159,3 +124,50 @@ def get_building_polygon(
             return poly
 
     return polygons[0]
+
+
+def get_building_polygon(
+    coords: tuple[float, float],
+    api_key: str,
+    radius_m: float = 30.0,
+    timeout_s: float = 10.0,
+    domain: Optional[str] = None,
+    *,
+    max_attempts: int = 3,
+) -> Optional[list[tuple[float, float]]]:
+    """
+    coords는 (lat, lon)로 들어온다고 가정.
+    (lon, lat)가 들어오는 경우가 많아서 대한민국 범위 기준 자동 보정.
+    또한 radius를 늘려가며 재시도해서 "가끔 안 잡히는" 케이스를 줄임.
+    """
+    lat, lon = coords
+
+    # (lon,lat) 입력 자동 교정(대한민국 범위 기준)
+    if not (33.0 <= lat <= 39.5 and 124.0 <= lon <= 132.5) and (33.0 <= lon <= 39.5 and 124.0 <= lat <= 132.5):
+        lat, lon = lon, lat
+
+    domain = domain or os.getenv("VWORLD_DOMAIN")
+
+    # radius escalation: 30m -> 60m -> 120m (기본)
+    radii = [radius_m, radius_m * 2, radius_m * 4]
+
+    for attempt in range(max_attempts):
+        r = radii[min(attempt, len(radii) - 1)]
+        try:
+            poly = _fetch_polygon_once(
+                lat=lat,
+                lon=lon,
+                api_key=api_key,
+                radius_m=r,
+                timeout_s=timeout_s,
+                domain=domain,
+            )
+            if poly:
+                return poly
+        except requests.RequestException as e:
+            print("[VWORLD WFS] RequestException:", str(e))
+
+        # backoff
+        time.sleep(0.2 * (2**attempt))
+
+    return None
