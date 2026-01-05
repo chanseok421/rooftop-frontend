@@ -25,11 +25,20 @@ class GeocodingService:
         self.provider = provider or default_provider()
 
     def geocode(self, address: str) -> LocationResult:
-         try:
+        address = (address or "").strip()
+
+        try:
             res = self.provider.geocode(address)
         except requests.RequestException as exc:
-            raise AddressNotFoundError("지오코딩 서비스에 연결하지 못했습니다. 잠시 후 다시 시도해주세요.") 
-from exc
+            raise AddressNotFoundError(
+                "지오코딩 서비스에 연결하지 못했습니다. 잠시 후 다시 시도해주세요."
+            ) from exc
+
+        if not res:
+            raise AddressNotFoundError("주소를 찾을 수 없습니다. 다른 주소를 입력해보세요.")
+
+        return res
+
 
 class _DummyGeocodingProvider:
     """No external API. Returns a fixed point near Seoul City Hall."""
