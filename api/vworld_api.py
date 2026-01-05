@@ -28,10 +28,7 @@ class VWorldGeocodingProvider:
         self.domain = _normalize_domain(domain)
         self.timeout_s = timeout_s
 
-    def geocode(self, address: str) -> LocationResult | None:
-        address = (address or "").strip()
-        if not address:
-            return None
+   def _build_params(self, address: str, *, include_domain: bool = True) -> dict:
 
         params = {
             "service": "address",
@@ -42,13 +39,16 @@ class VWorldGeocodingProvider:
             "address": address,
             "key": self.api_key,
         }
-        if self.domain:
+        if include_domain and self.domain:
             params["domain"] = self.domain
+        return params
+
+    def _request(self, params: dict) -> dict:
         resp = requests.get(self.BASE_URL, params=params, timeout=self.timeout_s)
         resp.raise_for_status()
-        data = resp.json()
+        return resp.json()
 
-        # 방어적으로 파싱
+    def _parse_response(self, data: dict, fallback_address: str) -> LocationResult | None:
         resp_obj = (data or {}).get("response") or {}
         if resp_obj.get("status") != "OK":
             return None
@@ -57,12 +57,37 @@ class VWorldGeocodingProvider:
         lon = float(point.get("x"))
         lat = float(point.get("y"))
 
-        normalized = ((resp_obj.get("refined") or {}).get("text") or address)
+        normalized = ((resp_obj.get("refined") or {}).get("text") or fallback_address)
 
         return LocationResult(
-            input_address=address,
+            input_address=fallback_address,
             normalized_address=normalized,
             point={"lat": lat, "lon": lon},
             provider="vworld",
             extra={"raw": data},
         )
+
+        def geocode(self, address: str) -> LocationResult | None:
+        address = (address or "").strip()
+        if not address:
+            return None
+        # 1차: domain 포함 요청 / 2차: domain 제거 후 재시도 (502 등 대비)
+        attempts = [self._build_params(address, include_domain=True)]
+        if self.domain:
+            attempts.append(self._build_params(address, include_domain=False))
+
+        last_error: Exception | None = None
+        for params in attempts:
+            try:
+                data = self._request(params)
+            except requests.RequestException as exc:
+                last_error = exc
+                continue
+
+            result = self._parse_response(data, address)
+            if result:
+                return result
+
+        if last_error:
+            raise last_error
+        return None
