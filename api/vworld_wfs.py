@@ -6,6 +6,7 @@ import time
 from typing import Iterable, Optional
 
 import requests
+from urllib.parse import urlparse
 
 VWORLD_WFS_URL = "https://api.vworld.kr/req/wfs"
 
@@ -51,6 +52,15 @@ def _extract_polygons(geometry: dict) -> list[list[tuple[float, float]]]:
             if poly:
                 polygons.append([(float(x), float(y)) for x, y in poly[0]])
     return polygons
+
+def _normalize_domain(domain: Optional[str]) -> Optional[str]:
+    if not domain:
+        return None
+    parsed = urlparse(domain)
+    if parsed.scheme:
+        return parsed.netloc or None
+    return domain
+
 
 
 def _fetch_polygon_once(
@@ -146,7 +156,7 @@ def get_building_polygon(
     if not (33.0 <= lat <= 39.5 and 124.0 <= lon <= 132.5) and (33.0 <= lon <= 39.5 and 124.0 <= lat <= 132.5):
         lat, lon = lon, lat
 
-    domain = domain or os.getenv("VWORLD_DOMAIN")
+    domain = _normalize_domain(domain or os.getenv("VWORLD_DOMAIN"))
 
     # radius escalation: 30m -> 60m -> 120m (기본)
     radii = [radius_m, radius_m * 2, radius_m * 4]

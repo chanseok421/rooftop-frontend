@@ -1,7 +1,18 @@
 from __future__ import annotations
 
+from urllib.parse import urlparse
+
 import requests
 from core.models import LocationResult
+
+def _normalize_domain(domain: str | None) -> str | None:
+    if not domain:
+        return None
+    parsed = urlparse(domain)
+    if parsed.scheme:
+        return parsed.netloc or None
+    # 이미 순수 도메인 문자열인 경우 그대로 사용
+    return domain
 
 class VWorldGeocodingProvider:
     """VWorld geocoding (address -> point).
@@ -14,7 +25,7 @@ class VWorldGeocodingProvider:
 
     def __init__(self, api_key: str, *, domain: str | None = None, timeout_s: float = 5.0):
         self.api_key = api_key
-        self.domain = domain
+        self.domain = _normalize_domain(domain)
         self.timeout_s = timeout_s
 
     def geocode(self, address: str) -> LocationResult | None:
