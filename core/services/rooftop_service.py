@@ -99,6 +99,8 @@ class RooftopService:
 
         # 내부적으로 물리 옥상면적(있으면)도 같이 들고 가지만, 모델에는 suggested만 반환
         roof_area_m2_raw: float | None = None
+         # roof_area_m2가 있을 때 α 역산으로 추정한 바닥면적(가용비율 계산용)
+        floor_area_from_roof: float | None = None
 
         suggested: float | None = None          # 최종 제안값: "녹화/활용 가능면적" (m²)
         floor_area_m2: float | None = None      # VWorld 폴리곤 기반 바닥면적(footprint) (m²)
@@ -111,6 +113,8 @@ class RooftopService:
             if v and v > 0:
                 roof_area_m2_raw = float(v)
                 suggested = estimate_greenable_roof_area_m2_from_roof(roof_area_m2_raw, beta=beta)
+                if alpha > 0:
+                    floor_area_from_roof = roof_area_m2_raw / alpha
 
                 confidence = "medium"
                 note = (
@@ -150,6 +154,10 @@ class RooftopService:
                         # candidates로 suggested를 이미 만들었지만, 바닥면적을 얻었으니 정보 보강
                         # (원하면 implied alpha 같은 것도 note에 추가 가능)
                         note = note + " 또한 VWorld 폴리곤(WFS)으로 바닥면적(A_floor)도 함께 추정했습니다."
+
+        if floor_area_m2 is None and floor_area_from_roof is not None:
+            floor_area_m2 = floor_area_from_roof
+            note = note + " VWorld가 없을 때는 roof_area_m2와 α를 사용해 바닥면적과 가용비율을 추정했습니다."
 
         return RooftopAreaEstimate(
             roof_area_m2_suggested=suggested,
